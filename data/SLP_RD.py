@@ -113,6 +113,9 @@ class SLP_RD:  # slp reader
 	flip_pairs = ut.nameToIdx(flip_pairs_name, joints_name)
 
 	def __init__(self, opts, phase='train', if_0base=True):
+		##################################################################### temp debugging
+		# print(opts)
+		
 		'''
 		for simplab,
 		:param opts:

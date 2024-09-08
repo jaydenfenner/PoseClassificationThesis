@@ -197,7 +197,8 @@ def validate(loader, ds_rd, model, criterion, n_iter=-1, logger=None, opts=None,
 				output_flipped_ori = output_flipped.clone() # hm only head changed? not possible??
 				output_flipped = flip_back(output_flipped.cpu().numpy(),
 				                           ds_rd.flip_pairs)
-				output_flipped = torch.from_numpy(output_flipped.copy()).cuda() # N x n_jt xh x w tch
+				# output_flipped = torch.from_numpy(output_flipped.copy()).cuda() # N x n_jt xh x w tch ######################################## removed to run on cpu only
+				output_flipped = torch.from_numpy(output_flipped.copy()).cpu() # N x n_jt xh x w tch
 
 				# feature is not aligned, shift flipped heatmap for higher accuracy
 				if_shiftHM = True  # no idea why
@@ -208,8 +209,8 @@ def validate(loader, ds_rd, model, criterion, n_iter=-1, logger=None, opts=None,
 
 				output = (output + output_flipped) * 0.5
 
-			target = target.cuda(non_blocking=True)
-			target_weight = target_weight.cuda(non_blocking=True)
+			# target = target.cuda(non_blocking=True) ################################################################# removed to run on cpu only
+			# target_weight = target_weight.cuda(non_blocking=True) ################################################################# removed to run on cpu only
 			loss = criterion(output, target, target_weight)
 
 			num_images = input.size(0)
@@ -321,10 +322,11 @@ def main():
 	).cuda()
 
 	# ds adaptor
-	SLP_rd_train = SLP_RD(opts, phase='train')  # all test result
-	SLP_fd_train = SLP_FD(SLP_rd_train, opts, phase='train', if_sq_bb=True)
-	train_loader = DataLoader(dataset=SLP_fd_train, batch_size= opts.batch_size // len(opts.trainset),
-	                    shuffle=True, num_workers=opts.n_thread, pin_memory=opts.if_pinMem)
+	########################################################################################################## temporary disable for testing only
+	# SLP_rd_train = SLP_RD(opts, phase='train')  # all test result
+	# SLP_fd_train = SLP_FD(SLP_rd_train, opts, phase='train', if_sq_bb=True)
+	# train_loader = DataLoader(dataset=SLP_fd_train, batch_size= opts.batch_size // len(opts.trainset),
+	#                     shuffle=True, num_workers=opts.n_thread, pin_memory=opts.if_pinMem)
 
 	SLP_rd_test = SLP_RD(opts, phase=opts.test_par)  # all test result      # can test against all controled in opt
 	SLP_fd_test = SLP_FD(SLP_rd_test,  opts, phase='test', if_sq_bb=True)
@@ -375,7 +377,8 @@ def main():
 	)
 
 	logger.info(get_model_summary(model, dump_input))
-	model = torch.nn.DataParallel(model, device_ids=opts.gpu_ids).cuda()
+	# model = torch.nn.DataParallel(model, device_ids=opts.gpu_ids).cuda() ############################ using cpu only
+	model = torch.nn.DataParallel(model, device_ids=opts.gpu_ids).cpu()
 
 	n_iter = opts.trainIter  # only for test purpose     quick test
 	if not if_test:

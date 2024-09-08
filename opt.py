@@ -11,7 +11,7 @@ def parseArgs(if_redef=True):
 	parser = configargparse .ArgumentParser(formatter_class=configargparse .ArgumentDefaultsHelpFormatter)
 
 	# -- env settings
-	parser.add_argument('--ds_fd', default='/scratch/liu.shu/datasets',
+	parser.add_argument('--ds_fd', default='../',
 		                    help='dataset directionry')  # for discovery
 	parser.add_argument('--output_dir', default='output', help='default output dirs')  # code local.
 	parser.add('--modelConf', default='config/HRpose.conf', is_config_file=True, help='Path to config file')
