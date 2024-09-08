@@ -11,8 +11,8 @@ dependencies:
   - brunsli=0.1=h23ab428_0
   - bzip2=1.0.8=h6c40b1e_6
   - c-ares=1.19.1=h6c40b1e_0
-  - ca-certificates=2024.7.4=h8857fd0_0
-  - certifi=2024.7.4=pyhd8ed1ab_0
+  - ca-certificates=2024.8.30=h8857fd0_0
+  - certifi=2024.8.30=pyhd8ed1ab_0
   - cffi=1.16.0=py38h6c40b1e_1
   - cfitsio=3.470=hee0f690_6
   - charls=2.2.0=h23ab428_0
@@ -71,7 +71,7 @@ dependencies:
   - numpy=1.19.2=py38h456fd55_0
   - numpy-base=1.19.2=py38hcfb5961_0
   - openjpeg=2.5.2=hbf2204d_0
-  - openssl=3.3.1=h87427d6_2
+  - openssl=3.3.2=hd23fc13_0
   - packaging=24.1=py38hecd8cb5_0
   - partd=1.4.1=py38hecd8cb5_0
   - pillow=10.4.0=py38h46256e1_0
@@ -100,6 +100,7 @@ dependencies:
   - unicodedata2=15.1.0=py38h6c40b1e_0
   - wheel=0.43.0=py38hecd8cb5_0
   - xz=5.4.6=h6c40b1e_1
+  - yacs=0.1.8=pyhd8ed1ab_0
   - yaml=0.2.5=haf1e3a3_0
   - zfp=0.5.5=he9d5cce_6
   - zipp=3.17.0=py38hecd8cb5_0
