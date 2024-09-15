@@ -1,0 +1,56 @@
+[92m08-23 13:18:59[0m 
+Total Parameters: 37,452,502
+----------------------------------------------------------------------------------------------------------------------------------
+Total Multiply Adds (For Convolution and Linear Layers only): 12.916175842285156 GFLOPs
+----------------------------------------------------------------------------------------------------------------------------------
+Number of Layers
+BatchNorm2d : 251 layers   ReLU : 180 layers   Conv2d : 257 layers   BnReluConv : 180 layers   ConvBlock : 59 layers   SkipLayer : 59 layers   Residual : 59 layers   MaxPool2d : 9 layers   Upsample : 8 layers   HourglassAttention : 8 layers   AttentionIter : 14 layers   AttentionPartsCRF : 1 layers   
+[92m08-23 13:19:40[0m 
+Total Parameters: 37,452,502
+----------------------------------------------------------------------------------------------------------------------------------
+Total Multiply Adds (For Convolution and Linear Layers only): 12.916175842285156 GFLOPs
+----------------------------------------------------------------------------------------------------------------------------------
+Number of Layers
+BatchNorm2d : 251 layers   ReLU : 180 layers   Conv2d : 257 layers   BnReluConv : 180 layers   ConvBlock : 59 layers   SkipLayer : 59 layers   Residual : 59 layers   MaxPool2d : 9 layers   Upsample : 8 layers   HourglassAttention : 8 layers   AttentionIter : 14 layers   AttentionPartsCRF : 1 layers   
+[92m08-23 13:25:42[0m 
+Total Parameters: 37,452,502
+----------------------------------------------------------------------------------------------------------------------------------
+Total Multiply Adds (For Convolution and Linear Layers only): 12.916175842285156 GFLOPs
+----------------------------------------------------------------------------------------------------------------------------------
+Number of Layers
+BatchNorm2d : 251 layers   ReLU : 180 layers   Conv2d : 257 layers   BnReluConv : 180 layers   ConvBlock : 59 layers   SkipLayer : 59 layers   Residual : 59 layers   MaxPool2d : 9 layers   Upsample : 8 layers   HourglassAttention : 8 layers   AttentionIter : 14 layers   AttentionPartsCRF : 1 layers   
+[92m08-23 13:25:42[0m ----run final test----
+[92m08-23 13:51:32[0m 
+Total Parameters: 37,452,502
+----------------------------------------------------------------------------------------------------------------------------------
+Total Multiply Adds (For Convolution and Linear Layers only): 12.916175842285156 GFLOPs
+----------------------------------------------------------------------------------------------------------------------------------
+Number of Layers
+BatchNorm2d : 251 layers   ReLU : 180 layers   Conv2d : 257 layers   BnReluConv : 180 layers   ConvBlock : 59 layers   SkipLayer : 59 layers   Residual : 59 layers   MaxPool2d : 9 layers   Upsample : 8 layers   HourglassAttention : 8 layers   AttentionIter : 14 layers   AttentionPartsCRF : 1 layers   
+[92m08-23 13:51:32[0m ----run final test----
+[92m08-23 13:55:31[0m 
+Total Parameters: 37,452,502
+----------------------------------------------------------------------------------------------------------------------------------
+Total Multiply Adds (For Convolution and Linear Layers only): 12.916175842285156 GFLOPs
+----------------------------------------------------------------------------------------------------------------------------------
+Number of Layers
+BatchNorm2d : 251 layers   ReLU : 180 layers   Conv2d : 257 layers   BnReluConv : 180 layers   ConvBlock : 59 layers   SkipLayer : 59 layers   Residual : 59 layers   MaxPool2d : 9 layers   Upsample : 8 layers   HourglassAttention : 8 layers   AttentionIter : 14 layers   AttentionPartsCRF : 1 layers   
+[92m08-23 13:55:31[0m ----run final test----
+[92m08-23 13:58:53[0m 
+Total Parameters: 37,452,502
+----------------------------------------------------------------------------------------------------------------------------------
+Total Multiply Adds (For Convolution and Linear Layers only): 12.916175842285156 GFLOPs
+----------------------------------------------------------------------------------------------------------------------------------
+Number of Layers
+BatchNorm2d : 251 layers   ReLU : 180 layers   Conv2d : 257 layers   BnReluConv : 180 layers   ConvBlock : 59 layers   SkipLayer : 59 layers   Residual : 59 layers   MaxPool2d : 9 layers   Upsample : 8 layers   HourglassAttention : 8 layers   AttentionIter : 14 layers   AttentionPartsCRF : 1 layers   
+[92m08-23 13:58:53[0m ----run final test----
+[92m08-23 14:00:46[0m 
+Total Parameters: 37,452,502
+----------------------------------------------------------------------------------------------------------------------------------
+Total Multiply Adds (For Convolution and Linear Layers only): 12.916175842285156 GFLOPs
+----------------------------------------------------------------------------------------------------------------------------------
+Number of Layers
+BatchNorm2d : 251 layers   ReLU : 180 layers   Conv2d : 257 layers   BnReluConv : 180 layers   ConvBlock : 59 layers   SkipLayer : 59 layers   Residual : 59 layers   MaxPool2d : 9 layers   Upsample : 8 layers   HourglassAttention : 8 layers   AttentionIter : 14 layers   AttentionPartsCRF : 1 layers   
+[92m08-23 14:00:46[0m ----run final test----
+[92m08-23 14:01:49[0m Test: [0/32]	Time 62.456 (62.456)	Loss 92314935296.0000 (92314935296.0000)	Accuracy 0.043 (0.043)
+[92m08-23 14:09:23[0m Test: [10/32]	Time 46.688 (46.968)	Loss 50315206656.0000 (56555472151.2727)	Accuracy 0.043 (0.047)

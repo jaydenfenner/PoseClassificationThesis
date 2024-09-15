@@ -1,0 +1,3 @@
+[92m09-08 21:05:00[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m09-08 21:05:01[0m ----run final test----
+[92m09-08 21:06:13[0m Test: [0/16]	Time 72.607 (72.607)	Loss 0.0015 (0.0015)	Accuracy 0.000 (0.000)

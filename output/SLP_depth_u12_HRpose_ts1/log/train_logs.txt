@@ -1,0 +1,6 @@
+[92m09-08 21:12:36[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m09-08 21:12:37[0m ----run final test----
+[92m09-08 21:13:47[0m Test: [0/16]	Time 69.817 (69.817)	Loss 0.0003 (0.0003)	Accuracy 0.975 (0.975)
+[92m09-08 21:21:28[0m Test: [10/16]	Time 44.786 (48.223)	Loss 0.0005 (0.0004)	Accuracy 0.870 (0.921)
+[92m09-08 21:25:05[0m              R_Ankle    R_Knee     R_Hip     L_Hip    L_Knee   L_Ankle   R_Wrist   R_ElbowR_ShoulderL_Shoulder   L_Elbow   L_Wrist    Thorax      Head     total
+[92m09-08 21:25:05[0m    pckh0.5      96.6      98.3      96.9      97.0      97.2      95.1      92.0      95.9      96.8      97.1      95.4      90.4      99.6      96.7      96.1

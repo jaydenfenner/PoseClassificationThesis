@@ -1,0 +1,7 @@
+[92m09-08 19:28:05[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m09-08 19:30:27[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m09-08 20:52:56[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m09-08 20:54:19[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m09-08 20:56:07[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m09-08 20:56:08[0m ----run final test----
+[92m09-08 20:57:15[0m Test: [0/16]	Time 67.058 (67.058)	Loss 0.0016 (0.0016)	Accuracy 0.012 (0.012)
