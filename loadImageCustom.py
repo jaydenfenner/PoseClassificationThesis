@@ -123,7 +123,7 @@ def readAndCropDepthPngFromSimLab(subj=1, cover: constants.CoverType = constants
     newMinX = (origWidth - newSize) // 2 + int(origWidth * shiftPercentageYX[1])
     img = img[newMinY:newMinY+newSize, newMinX:newMinX+newSize]
 
-    return img
+    return img, newMinY, newMinX
 
 
 def Original_readDepthPng(idx:int, cover='u'):
