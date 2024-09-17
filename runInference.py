@@ -10,7 +10,6 @@ IMPORTANT NOTES
 
 from data.SLP_RD import SLP_RD
 from data.SLP_FD import SLP_FD
-from main import validate
 import utils.vis as vis
 import utils.utils as ut
 import numpy as np
@@ -28,6 +27,8 @@ from torch.optim import Adam
 import time
 from utils.utils_ds import accuracy, flip_back
 from utils.visualizer import Visualizer
+# from validateCustom import validate
+from main import validate
 
 '''
 ############################################################################################################
@@ -97,6 +98,7 @@ with open(pth_rst, 'w') as f:
 
 # arguments?
 opts = opt.parseArgs()
+# print(f"runInference 101 opts.prep: {opts.prep}")
 ######################################################## MY ARGUMENTS
 pretrained_model_name = "SLP_depth_u12_HRpose_exp" # name of the pretrained model folder
 
@@ -116,6 +118,12 @@ else:
     opts.if_bb = False  #
 exec('from model.{} import get_pose_net'.format(opts.model))  # pose net in
 opts = opt.aug_opts(opts)  # add necesary opts parameters   to it
+
+#! needs to be added after the aug
+# parser.add_argument('--yn_flipTest', default='y')
+# yn_dict = {'y': True, 'n': False}
+# opts.if_flipTest = yn_dict[opts.yn_flipTest]
+opts.if_flipTest = False
 
 
 ############################################################################################################
@@ -161,6 +169,7 @@ def main():
 
     # single test with loaded model, save the result
     logger.info('----run final test----')
+    
     rst_test = validate(
         test_loader, SLP_rd_test, model, criterion,
         n_iter=n_iter, logger=logger, opts=opts, if_svVis=True)  # save preds, gt, preds_in ori, idst_normed to recovery
@@ -173,7 +182,7 @@ def main():
     pth_rst = path.join(opts.rst_dir, opts.nmTest + '.json')
     with open(pth_rst, 'w') as f:
         json.dump(rst_test, f)
-
+    
 
 if __name__ == '__main__':
     main()

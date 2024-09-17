@@ -23,7 +23,7 @@
                    if_adj: y                             
                     if_bb: True                          
              if_finalTest: n                             
-              if_flipTest: True                          
+              if_flipTest: False                         
               if_gtRtTest: y                             
              if_loadPreds: n                             
                 if_pinMem: True                          

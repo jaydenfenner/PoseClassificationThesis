@@ -239,11 +239,13 @@ def validate(loader, ds_rd, model, criterion, n_iter=-1, logger=None, opts=None,
 				mean = ds_rd.means[mod0]
 				std = ds_rd.stds[mod0]
 				img_patch_vis = ut.ts2cv2(input[0], mean, std) # to CV BGR
-				img_patch_vis_flipped = ut.ts2cv2(input_flipped[0], mean, std) # to CV BGR
+				if (opts.if_flipTest): #! had to add this to prevent crashing
+					img_patch_vis_flipped = ut.ts2cv2(input_flipped[0], mean, std) # to CV BGR
 				# pseudo change
 				cm = getattr(cv2,ds_rd.dct_clrMap[mod0])
 				img_patch_vis = cv2.applyColorMap(img_patch_vis, cm)
-				img_patch_vis_flipped = cv2.applyColorMap(img_patch_vis_flipped, cm)
+				if (opts.if_flipTest): #! had to add this to prevent crashing
+					img_patch_vis_flipped = cv2.applyColorMap(img_patch_vis_flipped, cm)
 
 				# original version get img from the ds_rd , different size , plot ing will vary from each other
 				# warp preds to ori
@@ -258,8 +260,9 @@ def validate(loader, ds_rd, model, criterion, n_iter=-1, logger=None, opts=None,
 				                  idx=idx_test)  # make sub dir if needed, recover to test set index by indexing.
 				# save the hm images. save flip test
 				hm_ori = ut.normImg(output_ori[0].cpu().numpy().sum(axis=0))    # rgb one
-				hm_flip = ut.normImg(output_flipped[0].cpu().numpy().sum(axis=0))
-				hm_flip_ori = ut.normImg(output_flipped_ori[0].cpu().numpy().sum(axis=0))
+				if (opts.if_flipTest): #! had to add this to prevent crashing
+					hm_flip = ut.normImg(output_flipped[0].cpu().numpy().sum(axis=0))
+					hm_flip_ori = ut.normImg(output_flipped_ori[0].cpu().numpy().sum(axis=0))
 				# subFd = mod0+'_hmFlip_ori'
 				# vis.save_img(hm_flip_ori, sv_dir, idx_test, sub=subFd)
 

@@ -16,7 +16,7 @@ from . import utils as utils_tool
 import plotly.graph_objects as go
 
 
-def vis_keypoints(img, kps, kps_lines, kp_thresh=0.4, alpha=1):
+def vis_keypoints(img, kps, kps_lines, kp_thresh=0.4, alpha=1, is_gt=False): #! Added ability to plot ground truths as pure green
 	'''
 	column format
 	:param img:
@@ -28,9 +28,14 @@ def vis_keypoints(img, kps, kps_lines, kp_thresh=0.4, alpha=1):
 	'''
 	# Convert from plt 0-1 RGBA colors to 0-255 BGR colors for opencv.
 	kps = kps.T  # transfrom it
-	cmap = plt.get_cmap('rainbow')
-	colors = [cmap(i) for i in np.linspace(0, 1, len(kps_lines) + 2)]
-	colors = [(c[2] * 255, c[1] * 255, c[0] * 255) for c in colors]
+	#! Added ability to plot ground truths as pure green ###############################################
+	if (is_gt):
+		color = (0, 255, 0) # BGR
+		colors = [color for i in range(len(kps_lines))]
+	else: 
+		cmap = plt.get_cmap('rainbow')
+		colors = [cmap(i) for i in np.linspace(0, 1, len(kps_lines) + 2)]
+		colors = [(c[2] * 255, c[1] * 255, c[0] * 255) for c in colors]
 
 	# Perform the drawing on a copy of the image, to allow for blending.
 	kp_mask = np.copy(img)

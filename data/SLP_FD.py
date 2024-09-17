@@ -142,6 +142,7 @@ class SLP_FD(Dataset):
 		rst = {'arr_tch':arr_tch, 'bb_tch':bb_tch}
 		# jt should be normalized to hm size 64, for test we don't change that
 		return rst
+	
 	def jt_hm(self, idx):
 		'''
 		joint heatmap format feeder.  get the img, hm(gaussian),  jts, l_std (head_size)

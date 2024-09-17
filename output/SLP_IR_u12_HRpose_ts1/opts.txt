@@ -1,6 +1,6 @@
 ----------------- Options ---------------
-                   SLP_fd: ./SLP/simLab                  
-                  SLP_set: simLab                        
+                   SLP_fd: ./SLP/danaLab                 
+                  SLP_set: danaLab                       
                batch_size: 60                            
           batch_size_pGPU: 60                            
             bbox_3d_shape: (2000, 2000, 2000)            
@@ -46,7 +46,7 @@
                  n_thread: 10                            
                      name: SLP_IR_u12_HRpose_ts1         
                    net_BB: res50                         
-                   nmTest: SLP-simLab_exp                
+                   nmTest: SLP-danaLab_exp               
                   no_html: False                         
                  num_gpus: 1                             
                 optimizer: adam                          
@@ -75,7 +75,7 @@
               use_gt_info: True                          
                  use_html: False                         
                   vis_dir: /Users/jaydenfenner/Desktop/PoseClassificationThesis/output/SLP_IR_u12_HRpose_ts1/vis/test
-             vis_test_dir: /Users/jaydenfenner/Desktop/PoseClassificationThesis/output/SLP_IR_u12_HRpose_ts1/vis/test/SLP_simLab
+             vis_test_dir: /Users/jaydenfenner/Desktop/PoseClassificationThesis/output/SLP_IR_u12_HRpose_ts1/vis/test/SLP_danaLab
                   web_dir: /Users/jaydenfenner/Desktop/PoseClassificationThesis/output/SLP_IR_u12_HRpose_ts1/web
               yn_flipTest: y                             
 ----------------- End -------------------
