@@ -100,9 +100,9 @@ def preparePngForInference(img):
     # displayTorchImg(img_input) #! display image for debugging purposes
     return img_input
 
-def readAndCropDepthPngFromSimLab(subj=1, cover: constants.CoverType = constants.CoverType.UNCOVER, poseNum=1):
+def readDepthPngFromSimLab(subj=1, cover: constants.CoverType = constants.CoverType.UNCOVER, poseNum=1):
     '''
-    Take an SLP simLab subject, cover and pose number and return the corresponding depth image prepared for inference\n
+    Take an SLP simLab subject, cover and pose number and return the image from simLab\n
     NOTE: subj from 1-7\n
     NOTE: cover from constants.CoverType
     NOTE: poseNum from 1-45\n
@@ -113,8 +113,9 @@ def readAndCropDepthPngFromSimLab(subj=1, cover: constants.CoverType = constants
     path_to_depthImg = f'SLP/simLab/{subjWithZeros}/depth/{cover.value}/image_{poseNumWithZeros}.png'
     img = io.imread(path_to_depthImg)
     img = np.array(img)
+    return img
 
-    #TODO cropping happens here
+def cropDepthPngFromSimLab(img):
     #! crop image to fixed square in centre
     origHeight, origWidth = img.shape[:2]
     shiftPercentageYX = [0.01, 0]
@@ -122,7 +123,6 @@ def readAndCropDepthPngFromSimLab(subj=1, cover: constants.CoverType = constants
     newMinY = (origHeight - newSize) // 2 + int(origHeight * shiftPercentageYX[0])
     newMinX = (origWidth - newSize) // 2 + int(origWidth * shiftPercentageYX[1])
     img = img[newMinY:newMinY+newSize, newMinX:newMinX+newSize]
-
     return img, newMinY, newMinX
 
 

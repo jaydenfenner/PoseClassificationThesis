@@ -5,7 +5,7 @@ import torch
 import numpy as np
 from model.HRpose import get_pose_net
 from loadImageCustom import constants #? numberOfJoints
-from loadImageCustom import readAndCropDepthPngFromSimLab, preparePngForInference
+from loadImageCustom import readDepthPngFromSimLab, cropDepthPngFromSimLab, preparePngForInference
 # from utils.utils_ds import get_max_preds #? removed after replacing with single-image version 
 import utils.vis as vis
 import utils.utils as ut
@@ -18,8 +18,11 @@ def getSimLabDepthGTs(subj):
     # print('joints gt shape', joints_gt_RGB_t.shape) #! joints gt shape (3, 14, 45)
     joints_gt_RGB_t = joints_gt_RGB_t.transpose([2, 1, 0])
     joints_gt_RGB_t = joints_gt_RGB_t - 1  # to 0 based # note third dim seems unised as all values are = -1.0
-    # print('joints gt shape', joints_gt_RGB_t.shape) #! joints gt shape (45, 14, 3)
+    #! the third value is used in plotting, set all to 1:
     # print(joints_gt_RGB_t[0]) #! [[ 2.55719178e+02  1.20155479e+03 -1.00000000e+00], ... ]
+    joints_gt_RGB_t[:,:,2] = 1
+    # print('joints gt shape', joints_gt_RGB_t.shape) #! joints gt shape (45, 14, 3)
+    # print(joints_gt_RGB_t[0]) #! [[ 2.55719178e+02  1.20155479e+03 1.00000000e+00], ... ]
 
     # load pointers for base modality (RGB) and target modality (depth)
     pth_PTr_depth = os.path.join("SLP/simLab", '{:05d}'.format(subj), 'align_PTr_depth.npy')
@@ -38,79 +41,60 @@ def getSimLabDepthGTs(subj):
     return joints_gt_depth_t
 
 def main():
+    modelName = constants.pretrained_model_name
     model = loadPretrainedModel()
+
+    # TODO define which simLab samples are to be loaded for inference
+    # for subj in ......
+    subj = 1
+    cover = constants.CoverType.COVER1
+
+    #! make save directory
+    save_dir='testImgOutput'
+    plottedImgFolderName = ('-').join(("predsVsGTs", "depthPng", "V1"))
+    save_path = os.path.join(save_dir, modelName, plottedImgFolderName, cover.value)
+    if not os.path.exists(save_path): os.makedirs(save_path)
 
     model.eval() # switch to evaluate mode
 
     # TODO define which simLab samples are to be loaded for inference
     # for subj in ......
     subj = 1
-    cover = constants.CoverType.UNCOVER
-    poseNum = 1
 
     joints_gt_depth_all = getSimLabDepthGTs(subj=subj)
     # print(f"max x or y in gts: {np.max(joints_gt_depth_all)}") #! max x or y in gts: 387.59526927382143
 
-    joints_gt_depth = joints_gt_depth_all[poseNum] #! (14, 3) --> [x, y, vis]
-    fullScale_img, yInset, xInset = readAndCropDepthPngFromSimLab(subj=subj, cover=cover, poseNum=poseNum)
-    joints_gt_depth[:, :2] = joints_gt_depth[:, :2] - [yInset, xInset]
-    input_img = preparePngForInference(fullScale_img)
     
-    input = input_img.unsqueeze(0) # Add batch dimension to make it [1, channels, height, width]
 
-    # run inference
-    with torch.no_grad(): # prevent gradient calculations
-        output = model(input) # (with batches) #! shape --> torch.Size([1, 14, 64, 64])
-        heatmaps = output.squeeze().numpy() #! convert output to numpy heatmaps, squeeze to remove batch dimension
+    for poseNum in range(1, 46):
+        #! read and prep image and ground truths
+        joints_gt_depth = joints_gt_depth_all[poseNum-1] #! (14, 3) --> [x, y, vis]
+        orig_img = readDepthPngFromSimLab(subj=subj, cover=cover, poseNum=poseNum)
+        cropped_img, yInset, xInset = cropDepthPngFromSimLab(orig_img)
+        joints_gt_depth[:, :2] = joints_gt_depth[:, :2] - [xInset, yInset] # shift gts to match cropped image
+        input_img = preparePngForInference(cropped_img) # convert to tensor and normalise
+        input = input_img.unsqueeze(0) # Add batch dimension to make it [1, channels, height, width]
+
+        # run inference
+        with torch.no_grad(): # prevent gradient calculations
+            output = model(input) # (with batches) #! shape --> torch.Size([1, 14, 64, 64])
+            heatmaps = output.squeeze().numpy() #! convert output to numpy heatmaps, squeeze to remove batch dimension
+
         preds = getPredsFromHeatmaps(heatmaps) #! simple argmax on each heatmap plus masking for negative values
 
         # scale predictions (currently [64,64] to input image size [256, 256] #! note different models will have different sizes
-        pred2d_patch = np.ones((preds.shape[0], 3)) # incude visibility flag = 1 (true for all)
-        pred2d_patch[:,:2] = preds / heatmaps.shape[1] * fullScale_img.shape[0] #! map preds to input image coords (from [0-64] to orig pixels)
+        pred2d_cropped = np.ones((preds.shape[0], 3)) # incude visibility flag = 1 (true for all)
+        pred2d_cropped[:,:2] = preds / heatmaps.shape[1] * cropped_img.shape[0] #! map preds to input image coords (from [0-64] to orig pixels)
         # print(f"fullScale_img.shape: {fullScale_img.shape}") #! (384, 384)
 
-        img_patch_vis = cv2.applyColorMap(fullScale_img, cv2.COLORMAP_BONE) # get image in rgb (h, w, 3)
-        '''
-        TARGET:
-        vis.vis_keypoints --> 
-        
-        img.shape: (256, 256, 3) #! need to apply colour map but not rescale
-        
-        kps:    [[112. 240.   1.] #! need to scale back to [0-256]
-                [112. 188.   1.]
-                [112. 132.   1.]
-                [144. 136.   1.]
-                [140. 184.   1.]
-                [140. 240.   1.]
-                [116. 112.   1.]
-                [ 92.  92.   1.]
-                [108.  56.   1.]
-                [156.  60.   1.]
-                [164.  92.   1.]
-                [144. 108.   1.]
-                [128.  52.   1.]
-                [124.  16.   1.]]
-        '''
+        #! plot preds and gts onto cropped image
+        img_patch_vis = cv2.applyColorMap(cropped_img, cv2.COLORMAP_BONE) # get image in rgb (h, w, 3)
+        tmpimg = vis.vis_keypoints(img_patch_vis, joints_gt_depth, kps_lines=constants.skels_idx, is_gt=True) # plot gts
+        tmpimg = vis.vis_keypoints(tmpimg, pred2d_cropped, kps_lines=constants.skels_idx, is_predForComparison=True) # plot preds
 
-        img_patch=img_patch_vis; pred_2d=pred2d_patch; skel=constants.skels_idx; sv_dir='testImgOutput'; suffix='-TEST_SUFFIX'; idx=1
-
-        sv_dir = os.path.join(sv_dir, '2d' + suffix) # make save directory
-        if not os.path.exists(sv_dir): os.makedirs(sv_dir)
-
-        tmpimg = vis.vis_keypoints(img_patch, pred_2d, skel) # plot preds
-        print(joints_gt_depth)
-        tmpimg = vis.vis_keypoints(tmpimg, joints_gt_depth, skel, is_gt=True) # plot gts
-
-        cv2.imwrite(os.path.join(sv_dir, str(idx) + '.jpg'), tmpimg)
-
-
-
-        # _, avg_acc, cnt, pred_hm = accuracy(output.cpu().numpy(), target.cpu().numpy()) #? where target is the gt_heatmaps
-        # def accuracy():
-            # pred, _ = get_max_preds(output) #! [N x n_jt x 2] --> per-batch 2D keypoints for each of the 14 joints
-
-            # norm = np.ones((1, 2)) * np.array([256, 256]) / 10  # use 0.1 as norm
-            # dists = calc_dists(pred, target, norm)  # given one , so not normalized
+        #! save plotted image
+        img_name = ('_').join(('s{:05d}'.format(subj), cover.value, 'p{:02d}'.format(poseNum)))
+        cv2.imwrite(os.path.join(save_path, img_name+'.jpg'), tmpimg)
 
 
 def getPredsFromHeatmaps(heatmaps):

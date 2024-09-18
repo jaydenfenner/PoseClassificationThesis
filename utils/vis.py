@@ -16,7 +16,7 @@ from . import utils as utils_tool
 import plotly.graph_objects as go
 
 
-def vis_keypoints(img, kps, kps_lines, kp_thresh=0.4, alpha=1, is_gt=False): #! Added ability to plot ground truths as pure green
+def vis_keypoints(img, kps, kps_lines, kp_thresh=0.4, alpha=1, is_gt=False, is_predForComparison=False): #! Added ability to plot ground truths as pure green
 	'''
 	column format
 	:param img:
@@ -31,6 +31,9 @@ def vis_keypoints(img, kps, kps_lines, kp_thresh=0.4, alpha=1, is_gt=False): #! 
 	#! Added ability to plot ground truths as pure green ###############################################
 	if (is_gt):
 		color = (0, 255, 0) # BGR
+		colors = [color for i in range(len(kps_lines))]
+	elif (is_predForComparison):
+		color = (0, 0, 255) # BGR
 		colors = [color for i in range(len(kps_lines))]
 	else: 
 		cmap = plt.get_cmap('rainbow')
