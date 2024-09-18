@@ -10,10 +10,9 @@ import numpy as np
 import cv2
 import torchvision.transforms as transforms
 import utils.utils as ut
-from data.SLP_RD import SLP_RD
-import opt
 from skimage import io
 from enum import Enum
+import croppingSimLab as crop
 
 def main():
     #* Checking image sizing
@@ -115,14 +114,9 @@ def readDepthPngFromSimLab(subj=1, cover: constants.CoverType = constants.CoverT
     img = np.array(img)
     return img
 
-def cropDepthPngFromSimLab(img):
-    #! crop image to fixed square in centre
-    origHeight, origWidth = img.shape[:2]
-    shiftPercentageYX = [0.01, 0]
-    newSize = int(origHeight * 0.75)
-    newMinY = (origHeight - newSize) // 2 + int(origHeight * shiftPercentageYX[0])
-    newMinX = (origWidth - newSize) // 2 + int(origWidth * shiftPercentageYX[1])
-    img = img[newMinY:newMinY+newSize, newMinX:newMinX+newSize]
+def cropDepthPngFromSimLab(img, subj):
+    # img, newMinY, newMinX = crop.standardPercentageCrop(img) #! 75% standard crop shifted 1% down
+    img, newMinY, newMinX = crop.individualSubjectCrop(img, subj)
     return img, newMinY, newMinX
 
 
