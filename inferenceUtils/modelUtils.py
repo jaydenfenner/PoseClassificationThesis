@@ -2,6 +2,7 @@ import torch
 from inferenceUtils.constants import PretrainedModels, constants, getModelProperties
 import importlib
 import os
+import numpy as np
 
 # Function to dynamically load the model and get the pose network
 def _load_pose_net(model: PretrainedModels):
@@ -45,3 +46,19 @@ def loadPretrainedModel(modelType: PretrainedModels):
     model = model.to('cpu') # send model to cpu
 
     return model
+
+
+def getPredsFromHeatmaps(heatmaps):
+    '''get predictions in pixel coords from heatmaps'''
+    assert isinstance(heatmaps, np.ndarray), 'heatmaps should be numpy.ndarray'
+    assert heatmaps.ndim == 3, 'heatmaps should be 3-ndim'
+    
+    preds = np.zeros((14, 2), dtype=np.float32) # initialised to 0 for masking
+    for i, heatmap in enumerate(heatmaps):
+        idx = np.argmax(heatmap) # Find the index of the maximum value
+        y, x = divmod(idx, heatmap.shape[1]) # Convert the index to 2D coordinates
+        
+        # Apply confidence masking
+        if (heatmap[y, x] > 0.0): preds[i] = [x, y] # update preds only if max condfidence > 0.0 (replicate original code)
+
+    return preds

@@ -10,7 +10,7 @@ from inferenceUtils.croppingSimLab import cropDepthPngFromSimLab
 import utils.vis as vis
 import cv2
 from inferenceUtils.simLabUtils import getSimLabDepthGTsForSubject
-from inferenceUtils.modelUtils import loadPretrainedModel, getModelProperties
+from inferenceUtils.modelUtils import loadPretrainedModel, getModelProperties, getPredsFromHeatmaps
 
 def main():
     modelType = PretrainedModels.HRPOSE_DEPTH # hardcoded to only use depth u12 model for now
@@ -82,22 +82,6 @@ def main():
                 cv2.imwrite(os.path.join(save_path, img_name+'.jpg'), tmpimg)
             print()
         print()
-
-
-def getPredsFromHeatmaps(heatmaps):
-    '''get predictions in pixel coords from heatmaps'''
-    assert isinstance(heatmaps, np.ndarray), 'heatmaps should be numpy.ndarray'
-    assert heatmaps.ndim == 3, 'heatmaps should be 3-ndim'
-    
-    preds = np.zeros((14, 2), dtype=np.float32) # initialised to 0 for masking
-    for i, heatmap in enumerate(heatmaps):
-        idx = np.argmax(heatmap) # Find the index of the maximum value
-        y, x = divmod(idx, heatmap.shape[1]) # Convert the index to 2D coordinates
-        
-        # Apply confidence masking
-        if (heatmap[y, x] > 0.0): preds[i] = [x, y] # update preds only if max condfidence > 0.0 (replicate original code)
-
-    return preds
 
 if __name__ == '__main__':
     main()
