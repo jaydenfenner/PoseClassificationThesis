@@ -10,6 +10,7 @@ def readDepthPngFromSimLab(subj=1, cover: CoverType = CoverType.UNCOVER, poseNum
     NOTE: subj from 1-7\n
     NOTE: cover from constants.CoverType
     NOTE: poseNum from 1-45\n
+    RETURNS:\n\n2D numpy array read from greyscale depth image
     '''
     #! construct path, read depth image png and convert to numpy array
     subjWithZeros = "{:05d}".format(subj)
@@ -19,10 +20,15 @@ def readDepthPngFromSimLab(subj=1, cover: CoverType = CoverType.UNCOVER, poseNum
     img = np.array(img)
     return img
 
-def preparePngForInference(img):
+def prepareNpDepthImgForInference(npImage):
+    '''
+    take square numpy image\n
+    resize, normalise and convert to tensor for inference with pytorch
+    - output is torch.Size([1, 256, 256])
+    '''
     #! resize image to required input size
     newSize = constants.model_input_size[0]
-    img_input = cv2.resize(img, (newSize, newSize), interpolation=cv2.INTER_AREA)
+    img_input = cv2.resize(npImage, (newSize, newSize), interpolation=cv2.INTER_AREA)
 
     #! convert to datatype supported by pytorch (float in format h,w,c)
     img_input = img_input.astype(np.float32)
@@ -36,4 +42,5 @@ def preparePngForInference(img):
     img_input = torch_transforms(img_input) #! imagePatch_Pytorch
 
     # displayTorchImg(img_input) #! display image for debugging purposes
+    print(img_input.shape)
     return img_input

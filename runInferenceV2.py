@@ -5,7 +5,7 @@ import torch
 import numpy as np
 from model.HRpose import get_pose_net
 from inferenceUtils.constants import constants, CoverType #? numberOfJoints
-from inferenceUtils.loadImage import readDepthPngFromSimLab, preparePngForInference
+from inferenceUtils.loadImage import readDepthPngFromSimLab, prepareNpDepthImgForInference
 from inferenceUtils.croppingSimLab import cropDepthPngFromSimLab
 # from utils.utils_ds import get_max_preds #? removed after replacing with single-image version 
 import utils.vis as vis
@@ -81,7 +81,7 @@ def main():
                 #! read and prep image
                 orig_img = readDepthPngFromSimLab(subj=subj, cover=cover, poseNum=poseNum)
                 cropped_img, yInset, xInset = cropDepthPngFromSimLab(orig_img, subj=subj)
-                input_img = preparePngForInference(cropped_img) # convert to tensor and normalise
+                input_img = prepareNpDepthImgForInference(cropped_img) # convert to tensor and normalise
                 input = input_img.unsqueeze(0) # Add batch dimension to make it [1, channels, height, width]
                 joints_gt_depth = joints_gt_depth_all[poseNum-1] #! (14, 3) --> [x, y, vis]
 
