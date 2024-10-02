@@ -12,13 +12,14 @@ import os
 import torch
 import numpy as np
 from inferenceUtils.constants import constants, CoverType, PretrainedModels
-from inferenceUtils.loadImage import readDepthPngFromSimLab, prepareNpDepthImgForInference
+from inferenceUtils.loadImage import cropAndRotate_D455, readD455DepthRaw, prepareNpDepthImgForInference
 from inferenceUtils.croppingSimLab import cropDepthPngFromSimLab
 # from utils.utils_ds import get_max_preds #? removed after replacing with single-image version 
 import utils.vis as vis
 import cv2
-from inferenceUtils.simLabUtils import getSimLabDepthGTsForSubject
 from inferenceUtils.modelUtils import loadPretrainedModel, getModelProperties, getPredsFromHeatmaps
+from D455_testing.comparePreprocessing import display_depth_image_with_colormap, displayTorchImg, readandCropSLPDepthImg
+from inferenceUtils.imageUtils import scaleNpImageForOpencv
 
 def main():
     modelType = PretrainedModels.HRPOSE_DEPTH # hardcoded to only use depth u12 model for now
@@ -27,70 +28,78 @@ def main():
     experiment_number = 'V3.0'
     modelName = modelProperties.pretrained_model_name
     plottedImgFolderName = ('-').join(("D455_Inferece", "snapshots", experiment_number))
-    save_base_path = os.path.join('testImgOutput', modelName, plottedImgFolderName)
-
-    # subjects_list = range(1,8) # [1, 2, ... , 7] # TODO restore to original
-    subjects_list = [7]
-    covers_list = [CoverType.UNCOVER] #[CoverType.COVER1, CoverType.COVER2, CoverType.UNCOVER] # TODO restore to original
+    # save_path = os.path.join('testImgOutput', modelName, plottedImgFolderName) # TODO change back to original
+    save_path = os.path.join('D455_testing')
+    # make save directory
+    if not os.path.exists(save_path): os.makedirs(save_path)
     
     print(f"--------------- Running Inference Script ---------------")
     print(f"model:              {modelName}")
     print(f"experiment_number:  {experiment_number}")
-    print(f"subjects_list:      {subjects_list}")
-    print(f"covers_list:        {[cover.value for cover in covers_list]}")
     print()
 
+    print(f"        Progress: " + '_'*45) # TODO change this to number of images
+    print(f"                : ", end='')
+
+    # TODO read some metadata file to retrieve cropping insets, but just hardcode for now
+    # yInset, xInset = readMetadataFile ...
+
+    #! Load and prep the model
     model = loadPretrainedModel(modelType=modelType)
     model.eval() # switch to evaluate mode
-    
-    for subj in subjects_list:
-        print(f"subj = {subj} of {subjects_list}")
-        joints_gt_depth_all = getSimLabDepthGTsForSubject(subj=subj) # (45, 14, 3)
-        # print(f"max x or y in gts: {np.max(joints_gt_depth_all)}") #! max x or y in gts: 387.59526927382143
 
-        #* read first image for subject to retrieve cropping insets
-        _, yInset, xInset = cropDepthPngFromSimLab(img=readDepthPngFromSimLab(), subj=subj) 
-        joints_gt_depth_all[:, :, :2] = joints_gt_depth_all[:, :, :2] - [xInset, yInset] # shift gts to match cropped image
+    # TODO read and index all of the input images
+    for img in [
+        ['D455_testing/D455_S01_u.raw', 'D455'],
+        ['D455_testing/SLP_subj01_u_p014.png', 'SLP'],
+                ]:
+        print(f"#", end='', flush=True)
+        print() # TODO remove
 
-        for cover in covers_list:
-            print(f"    cover = {cover.value} of {[cover.value for cover in covers_list]}")
-            #! make save directory
-            save_path = os.path.join(save_base_path, '{:05d}'.format(subj), cover.value)
-            if not os.path.exists(save_path): os.makedirs(save_path)
+        # TODO SLP vs .raw read/crop depending on filename extension?
 
-            print(f"        Progress: " + '_'*45)
-            print(f"                : ", end='')
-            for poseNum in range(1, 46):
-                print(f"#", end='', flush=True)
-                #! read and prep image
-                orig_img = readDepthPngFromSimLab(subj=subj, cover=cover, poseNum=poseNum)
-                cropped_img, yInset, xInset = cropDepthPngFromSimLab(orig_img, subj=subj)
-                input_img = prepareNpDepthImgForInference(cropped_img, modelType=modelType) # convert to tensor and normalise
-                input = input_img.unsqueeze(0) # Add batch dimension to make it [1, channels, height, width]
-                joints_gt_depth = joints_gt_depth_all[poseNum-1] #! (14, 3) --> [x, y, vis]
+        #! read and prep image
+        if img[1] == 'D455':
+            orig_img = readD455DepthRaw(img[0]) # read image - pre-crop
+            cropped_img = cropAndRotate_D455(orig_img) # rotate 90 deg anticlockwise and crop square region containing bed
+            # display_depth_image_with_colormap(cropped_img,'cropped', persistImages=True) ############## diplay for debugging #TODO maybe write something to save these for future reference
+        elif img[1] == 'SLP':
+            cropped_img = readandCropSLPDepthImg('D455_testing/SLP_subj01_u_p014.png')
+            pass
+        else:
+            raise ValueError("Unknown image type")
+        
+        input_img = prepareNpDepthImgForInference(cropped_img, modelType=modelType) # convert to tensor and normalise
+        # displayTorchImg(input_img, 'D455-input', persistImages=True) #TODO maybe write something to save these for future reference
+        input = input_img.unsqueeze(0) # Add batch dimension to make it [1, channels, height, width]
 
-                # run inference
-                with torch.no_grad(): # prevent gradient calculations
-                    output = model(input) # (with batches) #! shape --> torch.Size([1, 14, 64, 64])
-                    heatmaps = output.squeeze().numpy() #! convert output to numpy heatmaps, squeeze to remove batch dimension
+        #! run inference
+        with torch.no_grad(): # prevent gradient calculations
+            output = model(input) # (with batches) #? shape --> torch.Size([1, 14, 64, 64])
+            heatmaps = output.squeeze().numpy() # convert output to numpy heatmaps, squeeze to remove batch dimension
 
-                preds = getPredsFromHeatmaps(heatmaps) #! simple argmax on each heatmap plus masking for negative values
+        preds = getPredsFromHeatmaps(heatmaps) # simple argmax on each heatmap plus masking for negative values
+        print(f'preds: {preds}')
 
-                # scale predictions (currently [64,64] to input image size [256, 256] #! note different models will have different sizes
-                pred2d_cropped = np.ones((preds.shape[0], 3)) # incude visibility flag = 1 (true for all)
-                pred2d_cropped[:,:2] = preds / heatmaps.shape[1] * cropped_img.shape[0] #! map preds to input image coords (from [0-64] to orig pixels)
-                # print(f"fullScale_img.shape: {fullScale_img.shape}") #! (384, 384)
+        # scale predictions (currently [64,64] to input image size [256, 256] #! note different models will have different sizes
+        pred2d_cropped = np.ones((preds.shape[0], 3)) # incude visibility flag = 1 (true for all)
+        pred2d_cropped[:,:2] = preds / heatmaps.shape[1] * cropped_img.shape[0] #! map preds to input image coords (from [0-64] to orig pixels)
+        # print(f"fullScale_img.shape: {fullScale_img.shape}") #! (384, 384)
 
-                #! plot preds and gts onto cropped image
-                img_patch_vis = cv2.applyColorMap(cropped_img, cv2.COLORMAP_BONE) # get image in rgb (h, w, 3)
-                tmpimg = vis.vis_keypoints(img_patch_vis, joints_gt_depth, kps_lines=constants.skels_idx, is_gt=True) # plot gts
-                tmpimg = vis.vis_keypoints(tmpimg, pred2d_cropped, kps_lines=constants.skels_idx, is_predForComparison=True) # plot preds
+        #! plot preds and gts onto cropped image
+        cropped_img_cv2 = scaleNpImageForOpencv(cropped_img) # scale to 0-255 and convert to uint8
+        img_patch_vis = cv2.applyColorMap(cropped_img_cv2, cv2.COLORMAP_BONE) # get image in rgb (h, w, 3)
+        tmpimg = vis.vis_keypoints(img_patch_vis, pred2d_cropped, kps_lines=constants.skels_idx) # plot preds
 
-                #! save plotted image
-                img_name = ('_').join(('s{:05d}'.format(subj), cover.value, 'p{:02d}'.format(poseNum)))
-                cv2.imwrite(os.path.join(save_path, img_name+'.jpg'), tmpimg)
-            print()
-        print()
+        #! save plotted image
+        img_name = 'preds_'+img[1] # TODO create unique name for image (based off original?)
+        cv2.imwrite(os.path.join(save_path, img_name+'.jpg'), tmpimg)
+
+    print()
+
+    # Wait for any key press to close the window
+    # cv2.waitKey(0) 
+    # cv2.destroyAllWindows()
 
 if __name__ == '__main__':
     main()

@@ -4,6 +4,37 @@ from skimage import io
 import torchvision.transforms as transforms
 from inferenceUtils.constants import constants, CoverType, getModelProperties, PretrainedModels
 
+def cropAndRotate_D455(npImage) -> np.ndarray:
+    '''
+    Crop and rotate D455 depth numpy array for further preprocessing
+    - Rotate 90 deg to match SLp direction
+    - Crop to square containing bed
+    '''
+    rotated_image = np.rot90(npImage) # rotate 90 degrees anticlockwise
+
+    # crop to square and shift
+    shiftPercentageYX = [-0.02, 0] # down and right
+    origHeight, origWidth = rotated_image.shape[:2]
+    newSize = int(origWidth * 0.99)
+    newMinY = (origHeight - newSize) // 2 + int(origHeight * shiftPercentageYX[0])
+    newMinX = (origWidth - newSize) // 2 + int(origWidth * shiftPercentageYX[1])
+    cropped = rotated_image[newMinY:newMinY+newSize, newMinX:newMinX+newSize]
+
+    return cropped
+
+D455_DEFAULT_WIDTH = 640
+D455_DEFAULT_HEIGHT = 360
+depth_type = np.uint16 # metatada csv states 2 bytes per pixel
+def readD455DepthRaw(path: str, width = D455_DEFAULT_WIDTH, height = D455_DEFAULT_HEIGHT) -> np.ndarray:
+    '''Read D455 depth image and convert to numpy array'''
+    # Read the raw depth data
+    with open(path, 'rb') as f:
+        depth_image = np.frombuffer(f.read(), dtype=depth_type)
+    # Reshape to the correct dimensions (width, height)
+    depth_image = depth_image.reshape((height, width))
+    return depth_image
+
+
 def readDepthPngFromSimLab(subj=1, cover: CoverType = CoverType.UNCOVER, poseNum=1):
     '''
     Take an SLP simLab subject, cover and pose number and return the image from simLab\n

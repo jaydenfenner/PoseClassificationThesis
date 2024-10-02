@@ -5,6 +5,7 @@ from skimage import io
 from inferenceUtils.croppingSimLab import cropDepthPngFromSimLab
 from inferenceUtils.loadImage import prepareNpDepthImgForInference
 from inferenceUtils.imageUtils import display_depth_image_with_colormap, displayTorchImg, torchInputToNumpy
+from inferenceUtils.loadImage import readD455DepthRaw, cropAndRotate_D455
 
 ''' 
 TLDR: run this script from the repo root as: 
@@ -54,48 +55,6 @@ def readandCropSLPDepthImg(relativePath: str):
     npImg =  np.array(img) # convert to numpy array
     cropped, newMinY, newMinX = cropDepthPngFromSimLab(npImg, subj=1) # crop image (hardcode subj 1 cropping)
     return cropped
-
-def prepD455DepthRaw(path: str):
-    '''Preprocess D455 raw depth image into tensor for inference'''
-    original = readD455DepthRaw('path goes here')
-    cropped = cropAndRotate_D455(original)
-    return cropped
-
-
-
-def cropAndRotate_D455(npImage) -> np.ndarray:
-    '''
-    Crop and rotate D455 depth numpy array for further preprocessing
-    - Rotate 90 deg to match SLp direction
-    - Crop to square containing bed
-    '''
-    rotated_image = np.rot90(npImage) # rotate 90 degrees anticlockwise
-
-    # crop to square and shift
-    shiftPercentageYX = [-0.02, 0] # down and right
-    origHeight, origWidth = rotated_image.shape[:2]
-    newSize = int(origWidth * 0.99)
-    newMinY = (origHeight - newSize) // 2 + int(origHeight * shiftPercentageYX[0])
-    newMinX = (origWidth - newSize) // 2 + int(origWidth * shiftPercentageYX[1])
-    cropped = rotated_image[newMinY:newMinY+newSize, newMinX:newMinX+newSize]
-
-    return cropped
-
-
-
-D455_DEFAULT_WIDTH = 640
-D455_DEFAULT_HEIGHT = 360
-depth_type = np.uint16 # metatada csv states 2 bytes per pixel
-def readD455DepthRaw(path: str, width = D455_DEFAULT_WIDTH, height = D455_DEFAULT_HEIGHT) -> np.ndarray:
-    '''Read D455 depth image and convert to numpy array'''
-    # Read the raw depth data
-    with open(path, 'rb') as f:
-        depth_image = np.frombuffer(f.read(), dtype=depth_type)
-    # Reshape to the correct dimensions (width, height)
-    depth_image = depth_image.reshape((height, width))
-    return depth_image
-
-
 
 
 def save_array_to_csv(array, filename="depth_image.csv"):
