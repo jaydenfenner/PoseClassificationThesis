@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from skimage import io
 import torchvision.transforms as transforms
-from inferenceUtils.constants import constants, CoverType
+from inferenceUtils.constants import constants, CoverType, getModelProperties, PretrainedModels
 
 def readDepthPngFromSimLab(subj=1, cover: CoverType = CoverType.UNCOVER, poseNum=1):
     '''
@@ -20,14 +20,15 @@ def readDepthPngFromSimLab(subj=1, cover: CoverType = CoverType.UNCOVER, poseNum
     img = np.array(img)
     return img
 
-def prepareNpDepthImgForInference(npImage):
+def prepareNpDepthImgForInference(npImage, modelType: PretrainedModels):
     '''
     take square numpy image\n
     resize, normalise and convert to tensor for inference with pytorch
     - output is torch.Size([1, 256, 256])
     '''
     #! resize image to required input size
-    newSize = constants.model_input_size[0]
+    model_input_size = getModelProperties(modelType).model_input_size
+    newSize = model_input_size[0]
     img_input = cv2.resize(npImage, (newSize, newSize), interpolation=cv2.INTER_AREA)
 
     #! convert to datatype supported by pytorch (float in format h,w,c)
@@ -42,5 +43,5 @@ def prepareNpDepthImgForInference(npImage):
     img_input = torch_transforms(img_input) #! imagePatch_Pytorch
 
     # displayTorchImg(img_input) #! display image for debugging purposes
-    print(img_input.shape)
+    # print(img_input.shape) #! display image shape for debugging purposes
     return img_input

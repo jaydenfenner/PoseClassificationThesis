@@ -3,49 +3,24 @@
 import os
 import torch
 import numpy as np
-from model.HRpose import get_pose_net
-from inferenceUtils.constants import constants, CoverType #? numberOfJoints
+from inferenceUtils.constants import constants, CoverType, PretrainedModels
 from inferenceUtils.loadImage import readDepthPngFromSimLab, prepareNpDepthImgForInference
 from inferenceUtils.croppingSimLab import cropDepthPngFromSimLab
 # from utils.utils_ds import get_max_preds #? removed after replacing with single-image version 
 import utils.vis as vis
 import cv2
-
-import scipy.io as sio
-
-def getSimLabDepthGTs(subj):
-    joints_gt_RGB_t = sio.loadmat(os.path.join("SLP/simLab", '{:05d}'.format(subj), 'joints_gt_RGB.mat'))['joints_gt'] # 3 x n_jt x n_frm -> n_jt x 3
-    # print('joints gt shape', joints_gt_RGB_t.shape) #! joints gt shape (3, 14, 45)
-    joints_gt_RGB_t = joints_gt_RGB_t.transpose([2, 1, 0])
-    joints_gt_RGB_t = joints_gt_RGB_t - 1  # to 0 based # note third dim seems unised as all values are = -1.0
-    #! the third value is used in plotting, set all to 1:
-    # print(joints_gt_RGB_t[0]) #! [[ 2.55719178e+02  1.20155479e+03 -1.00000000e+00], ... ]
-    joints_gt_RGB_t[:,:,2] = 1
-    # print('joints gt shape', joints_gt_RGB_t.shape) #! joints gt shape (45, 14, 3)
-    # print(joints_gt_RGB_t[0]) #! [[ 2.55719178e+02  1.20155479e+03 1.00000000e+00], ... ]
-
-    # load pointers for base modality (RGB) and target modality (depth)
-    pth_PTr_depth = os.path.join("SLP/simLab", '{:05d}'.format(subj), 'align_PTr_depth.npy')
-    PTr_depth = np.load(pth_PTr_depth)
-    pth_PTr_RGB = os.path.join("SLP/simLab", '{:05d}'.format(subj), 'align_PTr_RGB.npy')
-    PTr_RGB = np.load(pth_PTr_RGB)
-
-    # homography RGB to depth #! stolen from SLP (no idea how it works but it converts RGB_gts to depth_gts)
-    PTr_RGB2depth = np.dot(np.linalg.inv(PTr_depth), PTr_RGB)
-    PTr_RGB2depth = PTr_RGB2depth / np.linalg.norm(PTr_RGB2depth)
-    joints_gt_depth_t = np.array(list(
-    map(lambda x: cv2.perspectiveTransform(np.array([x]), PTr_RGB2depth)[0], joints_gt_RGB_t[:, :, :2])))
-    joints_gt_depth_t = np.concatenate([joints_gt_depth_t, joints_gt_RGB_t[:, :, 2, None]], axis=2)
-    # print('joints gt_depth shape', joints_gt_depth_t.shape) #! joints gt shape (45, 14, 3)
-    # print(joints_gt_depth_t)
-    return joints_gt_depth_t
+from inferenceUtils.simLabUtils import getSimLabDepthGTsForSubject
+from inferenceUtils.modelUtils import loadPretrainedModel, getModelProperties
 
 def main():
-    experiment_number = 'V2.0'
-    modelName = constants.pretrained_model_name
+    modelType = PretrainedModels.HRPOSE_DEPTH # hardcoded to only use depth u12 model for now
+    modelProperties = getModelProperties(modelType=modelType)
+
+    experiment_number = 'V2.1'
+    modelName = modelProperties.pretrained_model_name
     # subjects_list = range(1,8) # [1, 2, ... , 7] # TODO restore to original
     subjects_list = [7]
-    covers_list = [CoverType.COVER1, CoverType.COVER2, CoverType.UNCOVER] # TODO restore to original
+    covers_list = [CoverType.UNCOVER] #[CoverType.COVER1, CoverType.COVER2, CoverType.UNCOVER] # TODO restore to original
     
     print(f"--------------- Running Inference Script ---------------")
     print(f"model:              {modelName}")
@@ -54,12 +29,12 @@ def main():
     print(f"covers_list:        {[cover.value for cover in covers_list]}")
     print()
 
-    model = loadPretrainedModel()
+    model = loadPretrainedModel(modelType=modelType)
     model.eval() # switch to evaluate mode
     
     for subj in subjects_list:
         print(f"subj = {subj} of {subjects_list}")
-        joints_gt_depth_all = getSimLabDepthGTs(subj=subj) # (45, 14, 3)
+        joints_gt_depth_all = getSimLabDepthGTsForSubject(subj=subj) # (45, 14, 3)
         # print(f"max x or y in gts: {np.max(joints_gt_depth_all)}") #! max x or y in gts: 387.59526927382143
 
         #* read first image for subject to retrieve cropping insets
@@ -81,7 +56,7 @@ def main():
                 #! read and prep image
                 orig_img = readDepthPngFromSimLab(subj=subj, cover=cover, poseNum=poseNum)
                 cropped_img, yInset, xInset = cropDepthPngFromSimLab(orig_img, subj=subj)
-                input_img = prepareNpDepthImgForInference(cropped_img) # convert to tensor and normalise
+                input_img = prepareNpDepthImgForInference(cropped_img, modelType=modelType) # convert to tensor and normalise
                 input = input_img.unsqueeze(0) # Add batch dimension to make it [1, channels, height, width]
                 joints_gt_depth = joints_gt_depth_all[poseNum-1] #! (14, 3) --> [x, y, vis]
 
@@ -124,21 +99,9 @@ def getPredsFromHeatmaps(heatmaps):
 
     return preds
 
-def loadPretrainedModel():
-    # get model (architecture only)
-    model = get_pose_net(in_ch=constants.numberOfChannels, out_ch=constants.numberOfJoints) # 1 channel (depth), 14 joints
-
-    pretrained_model_path = os.path.join("pretrainedModels", constants.pretrained_model_name, 'model_dump/checkpoint.pth')
-    checkpoint = torch.load(pretrained_model_path, map_location=torch.device('cpu')) #! note extra argument to use cpu
-    model.load_state_dict(checkpoint['state_dict'])
-
-    # model = torch.nn.DataParallel(model, device_ids=opts.gpu_ids) # paralellise the torch operations #! removed since I'm using cpu only
-    model = model.to('cpu') # send model to cpu
-
-    return model
-
 if __name__ == '__main__':
     main()
 
 
+# not sure when this happened but not deleting bc murphy's law...
 # RuntimeError: Expected 4-dimensional input for 4-dimensional weight 64 1 3 3, but got 3-dimensional input of size [1, 384, 384] instead
