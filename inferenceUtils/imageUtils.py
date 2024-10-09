@@ -11,16 +11,13 @@ def torchInputToNumpy(torchDepthImg):
     tensor_image = torchDepthImg.squeeze(0) # remove batch dim to get size [256, 256]
     numpy_image = tensor_image.numpy() # convert to numpy
 
-    # rescale for numpy display and change to uint8
-    min_val, max_val = numpy_image.min(), numpy_image.max()
-    if max_val > 255 or min_val < 0:
-        numpy_image = (numpy_image - min_val) / (max_val - min_val) * 255  # Scale to [0, 255]
-        numpy_image = numpy_image.astype(np.uint8)  # Convert to uint8 for display
+    numpy_image = scaleNpImageTo255(numpy_image, suppressScaleWarning=True)
     return numpy_image
 
 def display_depth_image_with_colormap(depth_image, name: str, persistImages = False):
     '''display numpy image with opencv and high-contrast colour map'''
-    depth_image = scaleNpImageForOpencv(depth_image)
+    depth_image = scaleNpImageTo255(depth_image)
+    depth_image = depth_image.astype(np.uint8)  # Convert to uint8 for display
     color_mapped_img = cv2.applyColorMap(depth_image, cv2.COLORMAP_JET) # Apply the color map
     cv2.imshow('Depth Image with COLORMAP_JET - '+name, color_mapped_img) # Display the image using OpenCV
     
@@ -28,12 +25,13 @@ def display_depth_image_with_colormap(depth_image, name: str, persistImages = Fa
         cv2.waitKey(0) # Wait for a key press and close the window
         cv2.destroyAllWindows()
 
-def scaleNpImageForOpencv(depth_image):
-    '''Scale image to 0-255 and convert to uint8 to enable display with opencv'''
-    # Check if the image needs to be scaled to 0-255 range
-    if depth_image.max() > 255 or depth_image.min() < 0:
-        depth_image = cv2.normalize(depth_image, None, 0, 255, cv2.NORM_MINMAX)
+def scaleNpImageTo255(numpy_image, suppressScaleWarning = False):
+    '''Scale image to 0-255'''
 
-    depth_image = depth_image.astype(np.uint8) # Ensure the image is in uint8 format for proper display
+    # rescale for numpy display and change to uint8
+    min_val, max_val = numpy_image.min(), numpy_image.max()
+    if max_val > 255 or min_val < 0:
+        if (not suppressScaleWarning): print(f"scaleNpImageTo255:   npImage outside 0-255 (min: {min_val}, max: {max_val}), rescaling to fit")
+        numpy_image = (numpy_image - min_val) / (max_val - min_val) * 255  # Scale to [0, 255]
 
-    return depth_image
+    return numpy_image

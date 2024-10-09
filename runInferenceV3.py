@@ -18,8 +18,11 @@ from inferenceUtils.croppingSimLab import cropDepthPngFromSimLab
 import utils.vis as vis
 import cv2
 from inferenceUtils.modelUtils import loadPretrainedModel, getModelProperties, getPredsFromHeatmaps
-from D455_testing.comparePreprocessing import display_depth_image_with_colormap, displayTorchImg, readandCropSLPDepthImg
-from inferenceUtils.imageUtils import scaleNpImageForOpencv
+
+from D455_testing.comparePreprocessing import display_depth_image_with_colormap, displayTorchImg, readandCropSLPDepthImg, threshold_depth_image
+from D455_testing.comparePreprocessing import set_margin_to_max, truncate_min_to_threshold, scale_to_fit_range, apply_mask_with_line, apply_circular_mask
+
+from inferenceUtils.imageUtils import scaleNpImageTo255
 
 def main():
     modelType = PretrainedModels.HRPOSE_DEPTH # hardcoded to only use depth u12 model for now
@@ -50,8 +53,20 @@ def main():
 
     # TODO read and index all of the input images
     for img in [
-        ['D455_testing/D455_S01_u.raw', 'D455'],
-        ['D455_testing/SLP_subj01_u_p014.png', 'SLP'],
+        # ['D455_testing/simLab_subj01_u_p014.png', 'simLab', 's01_u'],
+        # ['D455_testing/danaLab_sample_u.png', 'danaLab', 's01_u'],
+        # ['D455_testing/danaLab_side_sample_u.png', 'danaLab', 's02_u'],
+        # ['D455_testing/D455_S01_u.raw', 'D455_V1', 'S01_u'],
+        # ['D455_testing/D455_S02_u.raw', 'D455_V1', 'S02_u'],
+        # ['D455_testing/D455_S04_c.raw', 'D455_V1', 'S04_c'],
+        # ['D455_testing/D455_S07_u.raw', 'D455_V1', 'S07_u'],
+        # ['D455_cinema2/300_Depth.raw', 'D455_V3', 'S01_u'],
+        # ['D455_cinema2/200_Depth.raw', 'D455_V3', 'S02_u'],
+        ['D455_cinema1/1_Depth.raw', 'D455_V2', 'S01_u'], 
+        ['D455_cinema1/2_Depth.raw', 'D455_V2', 'S02_u'], 
+        ['D455_cinema1/3_Depth.raw', 'D455_V2', 'S03_u'],
+        ['D455_cinema1/6_Depth.raw', 'D455_V2', 'S03_c'], 
+        ['D455_cinema1/7_Depth.raw', 'D455_V2', 'S01_c'],
                 ]:
         print(f"#", end='', flush=True)
         print() # TODO remove
@@ -59,15 +74,57 @@ def main():
         # TODO SLP vs .raw read/crop depending on filename extension?
 
         #! read and prep image
-        if img[1] == 'D455':
+        if img[1] == 'D455_V1':
+            if(False): #! PREVIOUS METHOD, DID NOT WORK
+                orig_img = readD455DepthRaw(img[0]) # read image - pre-crop
+                cropped_img = cropAndRotate_D455(orig_img, runName='D455_V1') # rotate 90 deg anticlockwise and crop square region containing bed
+                # display_depth_image_with_colormap(cropped_img,'cropped', persistImages=True) ############## diplay for debugging #TODO maybe write something to save these for future reference
+                
+                # cropped_img = threshold_depth_image(cropped_img, threshold_value=2200) #! also mask high depth pixels
+                # cropped_img = set_margin_to_max(cropped_img, margin_percent_x=[0.1, 0.16], margin_percent_y=[0.03, 0.]) #! also mask margins of image
+            else:
+                D455_image = readD455DepthRaw(img[0]) # read image - pre-crop
+                D455_cropped = cropAndRotate_D455(D455_image, runName='D455_V1') #? note run name must match option in cropAndRotate_D455
+                D455_cropped = scaleNpImageTo255(D455_cropped, suppressScaleWarning=True)
+                D455_cropped = set_margin_to_max(D455_cropped, margin_percent_x=[0.1, 0.155], margin_percent_y=[0.03, 0.])
+                #? scale and shift based on histograms to set bed variation and height equal to danaLab (clip top 0-255 at end)
+                D455_cropped = scale_to_fit_range(D455_cropped, 
+                                                currentMin=180, currentMax=207, # current based on histogram before scaling
+                                                desiredMin=162, desiredMax=186) # desired matching danaLab histogram after cropping
+                D455_cropped = threshold_depth_image(D455_cropped, threshold_value=189, background_value=220)
+                cropped_img = D455_cropped
+
+        elif img[1] == 'D455_V2':
             orig_img = readD455DepthRaw(img[0]) # read image - pre-crop
-            cropped_img = cropAndRotate_D455(orig_img) # rotate 90 deg anticlockwise and crop square region containing bed
-            # display_depth_image_with_colormap(cropped_img,'cropped', persistImages=True) ############## diplay for debugging #TODO maybe write something to save these for future reference
-        elif img[1] == 'SLP':
-            cropped_img = readandCropSLPDepthImg('D455_testing/SLP_subj01_u_p014.png')
-            pass
+            D455_cropped = cropAndRotate_D455(orig_img, runName='D455_V2') #? note run name must match option in cropAndRotate_D455
+            D455_cropped = scaleNpImageTo255(D455_cropped, suppressScaleWarning=True)
+            D455_cropped = apply_mask_with_line(D455_cropped, point=(0.779, 0.5), angle_degrees=88, maskBelow=True)
+            D455_cropped = apply_circular_mask(D455_cropped, center=(1.2, 0.675), radius_ratio=0.45)
+            #? scale and shift based on histograms to set bed variation and height equal to danaLab (clip top 0-255 at end)
+            D455_cropped = scale_to_fit_range(D455_cropped, 
+                                            currentMin=201, currentMax=230, # current based on histogram before scaling
+                                            desiredMin=162, desiredMax=186) # desired matching danaLab histogram after cropping
+            D455_cropped = threshold_depth_image(D455_cropped, threshold_value=185, background_value=220)
+            cropped_img = D455_cropped
+
+        elif img[1] == 'D455_V3':
+            orig_img = readD455DepthRaw(img[0]) # read image - pre-crop
+            D455_cropped = cropAndRotate_D455(orig_img, runName='D455_V3') # rotate 90 deg anticlockwise and crop square region containing bed
+            D455_cropped = scaleNpImageTo255(D455_cropped, suppressScaleWarning=True) # convert image to 0-255 for ease of use
+            D455_cropped = set_margin_to_max(D455_cropped, margin_percent_x=[0., 0.25], margin_percent_y=[0., 0.]) # remove ladder with margin
+            # scale bed to match danaLab
+            D455_cropped = scale_to_fit_range(D455_cropped, 
+                                            currentMin=204, currentMax=232, # current based on histogram before scaling
+                                            desiredMin=162, desiredMax=186) # desired matching danaLab histogram after cropping
+            D455_cropped = threshold_depth_image(D455_cropped, threshold_value=196, background_value=220) # threshold background to match danaLab
+            cropped_img = D455_cropped
+
+        elif img[1] == 'simLab':
+            cropped_img = readandCropSLPDepthImg(img[0]) #? use for simLab sample
+        elif img[1] == 'danaLab':
+            cropped_img = readandCropSLPDepthImg(img[0], cropParams_scaleY_x_y=[0.7, 0.12, 0.])  #? use for danaLab sample
         else:
-            raise ValueError("Unknown image type")
+            raise ValueError(f"Unknown image type: {img[1]}")
         
         input_img = prepareNpDepthImgForInference(cropped_img, modelType=modelType) # convert to tensor and normalise
         # displayTorchImg(input_img, 'D455-input', persistImages=True) #TODO maybe write something to save these for future reference
@@ -87,12 +144,13 @@ def main():
         # print(f"fullScale_img.shape: {fullScale_img.shape}") #! (384, 384)
 
         #! plot preds and gts onto cropped image
-        cropped_img_cv2 = scaleNpImageForOpencv(cropped_img) # scale to 0-255 and convert to uint8
+        cropped_img_cv2 = scaleNpImageTo255(cropped_img) # scale to 0-255 and convert to uint8
+        cropped_img_cv2 = cropped_img_cv2.astype(np.uint8)
         img_patch_vis = cv2.applyColorMap(cropped_img_cv2, cv2.COLORMAP_BONE) # get image in rgb (h, w, 3)
         tmpimg = vis.vis_keypoints(img_patch_vis, pred2d_cropped, kps_lines=constants.skels_idx) # plot preds
 
         #! save plotted image
-        img_name = 'preds_'+img[1] # TODO create unique name for image (based off original?)
+        img_name = f'preds_{img[1]}_{img[2]}' # TODO create unique name for image (based off original?)
         cv2.imwrite(os.path.join(save_path, img_name+'.jpg'), tmpimg)
 
     print()

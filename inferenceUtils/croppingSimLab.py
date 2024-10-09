@@ -8,6 +8,18 @@ def main():
     displayTestCrop(img, cropped)
     pass
 
+def cropNpImage_scaleY_XY(img, scaleY, shiftX, shiftY):
+    ''' Crop Deoth image to a % of max height, and shift by %(x, y)
+    - Return (cropped, newMinY, newMinX)
+    '''
+    origHeight, origWidth = img.shape[:2]
+    shiftPercentageYX = [shiftY, shiftX]
+    newSize = int(origHeight * scaleY)
+    newMinY = (origHeight - newSize) // 2 + int(origHeight * shiftPercentageYX[0])
+    newMinX = (origWidth - newSize) // 2 + int(origWidth * shiftPercentageYX[1])
+    cropped = img[newMinY:newMinY+newSize, newMinX:newMinX+newSize]
+    return cropped, newMinY, newMinX
+
 def cropDepthPngFromSimLab(img, subj):
     # img, newMinY, newMinX = crop.standardPercentageCrop(img) #! 75% standard crop shifted 1% down
     cropped, newMinY, newMinX = individualSubjectCrop(img, subj) #! crop separately for each subject to only bed (exclude bedhead)
@@ -24,13 +36,14 @@ def individualSubjectCrop(img, subj):
         [0.67, 0.04, 0.02], # 00006
         [0.67, 0.04, 0.045], # 00007
     ]
-    heightScale, shiftX, shiftY = percentagesPerSubj[subj-1]
-    origHeight, origWidth = img.shape[:2]
-    shiftPercentageYX = [shiftY, shiftX]
-    newSize = int(origHeight * heightScale)
-    newMinY = (origHeight - newSize) // 2 + int(origHeight * shiftPercentageYX[0])
-    newMinX = (origWidth - newSize) // 2 + int(origWidth * shiftPercentageYX[1])
-    cropped = img[newMinY:newMinY+newSize, newMinX:newMinX+newSize]
+    cropParams_scaleY_x_y = percentagesPerSubj[subj-1]
+    cropped, newMinY, newMinX = cropNpImage_scaleY_XY(
+        img,
+        cropParams_scaleY_x_y[0],
+        cropParams_scaleY_x_y[1],
+        cropParams_scaleY_x_y[2]
+    )
+    
     return cropped, newMinY, newMinX
 
 def standardPercentageCrop(img):
