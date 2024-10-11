@@ -1,0 +1,58 @@
+Setup for thesis official D455 capture session #01
+
+Camera Settings:
+- Preset: "Default"
+- Laser Strength: (maximum)
+- Resolution: (maximum = 1280 x 720) ---> snapshots returned are 640 x 360
+- Frame Rate: 30 FPS
+- Postprocessing (leave as default)
+
+
+Naming Convention:
+
+Ordered by: (0 through 9)
+- TOGGLE PILLOW / NO PILLOW
+- Right, Back, Left, Front
+- 0% occlusion
+- Sheet, 60% occlusion, 90% occlusion
+- Quilt 60% occlusion, 90% occlusion
+
+
+NUMBERING:
+BACK AND RIGHT
+- 1: no pillow, no occlusion
+
+- 2: no pillow, 60% sheet
+- 3: no pillow, 90% sheet
+--------------------------------------
+- 4: no pillow, 60% quilt
+- 5: no pillow, 90% quilt
+--------------------------------------
+- 6: pillow, no occlusion
+
+- 7: pillow, 60% sheet
+- 8: pillow, 90% sheet
+
+- 9: pillow, 60% quilt
+- 10: pillow, 90% quilt
+--------------------------------------
+
+
+NUMBERING:
+FRONT AND LEFT
+- 1: no pillow, no occlusion
+- 2: pillow, no occlusion
+
+- 3: no pillow, 60% sheet
+- 4: pillow, 60% sheet
+- 5: no pillow, 90% sheet
+- 6: pillow, 90% sheet
+--------------------------------------
+- 7: no pillow, 60% quilt
+- 8: pillow, 60% quilt
+- 9: no pillow, 90% quilt
+- 10: pillow, 90% quilt
+--------------------------------------
+
+
+
