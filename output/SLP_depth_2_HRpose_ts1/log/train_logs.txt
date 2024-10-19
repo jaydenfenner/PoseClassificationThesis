@@ -76,3 +76,7 @@
 [92m09-17 19:59:45[0m Test: [0/6]	Time 94.831 (94.831)	Loss 0.0004 (0.0004)	Accuracy 0.933 (0.933)
 [92m09-17 21:26:26[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
 [92m09-17 21:26:29[0m ----run final test----
+[92m10-10 08:58:37[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m10-10 08:58:38[0m ----run final test----
+[92m10-10 09:00:42[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m10-10 09:00:43[0m ----run final test----

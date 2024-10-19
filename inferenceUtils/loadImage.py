@@ -21,6 +21,8 @@ def cropAndRotate_D455(npImage, runName: str) -> np.ndarray:
         cropped = crop_D455_custom(npImage, heightScale=0.85, pShiftDown=0.03, pShiftRight=0.01)
     elif (runName == 'D455_V3'):
         cropped = crop_D455_custom(npImage, heightScale=0.85, pShiftDown=0.03, pShiftRight=0.01)
+    elif (runName == 'D455_S01'):
+        cropped = crop_D455_custom(npImage, heightScale=0.85, pShiftDown=0.03, pShiftRight=0.02)
     else:
         raise ValueError(f'runName not recognised: [{runName}]')
     return cropped
@@ -90,12 +92,34 @@ def prepareNpDepthImgForInference(npImage, modelType: PretrainedModels):
     img_input = img_input.astype(np.float32)
     img_input = img_input[..., None]
 
+    #! DISPLAY NORMALISATION INFORMATION FOR DEBUGGING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    print(f"\n---- NORMALISING ------")
+    print(f"norm mean: {constants.mean_depth}")
+    print(f"norm std: {constants.std_depth}")
+    print(f"pre-norm -->")
+    print(f"	img_mean: {img_input.mean()}")
+    print(f"	img_std: {img_input.std()}")
+    print(f"	img_max: {img_input.max()}")
+    print(f"	img_min: {img_input.min()}")
+    #! DISPLAY NORMALISATION INFORMATION FOR DEBUGGING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    # 0-255
+    # img / 255
+
     # convert to tensor and normalise
     torch_transforms = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[constants.mean_depth], std=[constants.std_depth]) # mean = 0.7302197, std = 0.25182092
         ])
     img_input = torch_transforms(img_input)
+
+    #! DISPLAY NORMALISATION INFORMATION FOR DEBUGGING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    print(f"post-norm -->")
+    print(f"	img_mean: {img_input.mean()}")
+    print(f"	img_std: {img_input.std()}")
+    print(f"	img_max: {img_input.max()}")
+    print(f"	img_min: {img_input.min()}")
+    #! DISPLAY NORMALISATION INFORMATION FOR DEBUGGING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     # displayTorchImg(img_input) #? display image for debugging purposes
     # print(img_input.shape) #? display image shape for debugging purposes

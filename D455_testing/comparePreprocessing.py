@@ -115,9 +115,6 @@ def main():
     
     #************** for D455 (third run SECOND ATTEMPT AT PREPROCESSING):
     if (False):
-        # for thresh in [2650, 2690, 2700, 2710]: #? 2690 was best
-        thresh = 2690
-        
         D455_image = readD455DepthRaw('D455_cinema2/200_Depth.raw') # read image - pre-crop
         # # save_array_to_csv(D455_image)
         # display_depth_histogram(D455_image, 'D455-original')
@@ -133,8 +130,13 @@ def main():
         D455_cropped = scaleNpImageTo255(D455_cropped, suppressScaleWarning=False)
         D455_cropped = scaleNpImageTo255(D455_cropped) # again for sanity check
 
+
         # TODO remove ladder by cropping margin to max
         D455_cropped = set_margin_to_max(D455_cropped, margin_percent_x=[0., 0.25], margin_percent_y=[0., 0.])
+
+        D455_cropped[0][0] = 255
+        display_depth_image_with_colormap(D455_cropped, f'D455_cropped', persistImages=True)
+        display_depth_histogram(D455_cropped, 'D455_cropped', bins=50)
 
         # display_depth_histogram(D455_cropped, 'D455_cropped', bins=200) #! histogram pre-scaling (use to find current bed min and max)
         # TODO scale and shift based on histograms to set bed variation and height equal to danaLab (clip top 0-255 at end)
@@ -155,7 +157,7 @@ def main():
         # display_depth_histogram(D455_cropped, 'D455_crop_scale_shift_mask', bins=50) #! histogram post-thresholding (floor now match danaLab)
 
         D455_tensor_input = prepareNpDepthImgForInference(D455_cropped, modelType)
-        displayTorchImg(D455_tensor_input, f'D455-input{thresh}', persistImages=True)
+        displayTorchImg(D455_tensor_input, f'D455-input', persistImages=True)
 
         if (False): # display histograms
             display_depth_histogram(D455_cropped, 'D455_cropped', bins=200)
@@ -186,7 +188,7 @@ def main():
         display_depth_image_with_colormap(D455_cropped,'D455-cropped', persistImages=True)
 
     #************** for D455 (V2 --> replicate V3 above):
-    if (True):
+    if (False):
         valid_image_numbers = [1, 2, 3, 6, 7] # note 6, 7 are WITH COVER versions of 1, 3
         imageNumber = valid_image_numbers[3]
         D455_image = readD455DepthRaw(f'D455_cinema1/{imageNumber}_Depth.raw') # read image - pre-crop
@@ -208,6 +210,45 @@ def main():
 
         display_depth_image_with_colormap(D455_cropped,'D455-cropped', persistImages=True)
         display_depth_histogram(D455_cropped, 'D455_cropped', bins=200) #! histogram post-scaling (bed min/max now match danaLab)
+
+    #************** for D455_S01 (replicate V2 & V3 above):
+    if (True):
+        if (False): 
+            D455_image = readD455DepthRaw(f'D455_S01/BACK/S01_B_0_np_Depth.raw') # read image - pre-crop
+        elif (True): 
+            D455_image = readD455DepthRaw(f'D455_S01/LEFT_(HARD)/S01_LH_Q-90_wp_Depth.raw') # read image - pre-crop
+        else: 
+            D455_image = readD455DepthRaw(f'D455_S01/BACK/S01_B_Q-90_wp_Depth.raw') # read image - pre-crop
+
+        D455_cropped = cropAndRotate_D455(D455_image, runName='D455_S01') #? note run name must match option in cropAndRotate_D455
+
+        D455_cropped = scaleNpImageTo255(D455_cropped, suppressScaleWarning=True)
+
+        # D455_cropped = set_margin_to_max(D455_cropped, margin_percent_x=[0., 0.21], margin_percent_y=[0., 0.])
+        D455_cropped = apply_mask_with_line(D455_cropped, point=(0.81, 0.5), angle_degrees=89, maskBelow=True)
+
+        # D455_cropped = apply_circular_mask(D455_cropped, center=(1.232, 0.68), radius_ratio=0.45) #! OLD
+        D455_cropped = apply_circular_mask(D455_cropped, center=(0.903, 0.21), radius_ratio=0.103) # top leg
+        D455_cropped = apply_circular_mask(D455_cropped, center=(0.889, 0.68), radius_ratio=0.102) # bottom leg
+
+        # display_depth_image_with_colormap(D455_cropped,'D455-cropped', persistImages=True) # TODO REMOVE %%%%%%%%%%%%%%%%%%%%%%%
+
+        # display_depth_histogram(D455_cropped, 'D455_cropped', bins=200) # TODO bed (min, max) = (180, 207)
+        #? scale and shift based on histograms to set bed variation and height equal to danaLab (clip top 0-255 at end)
+        D455_cropped = scale_to_fit_range(D455_cropped, 
+                                          currentMin=202, currentMax=234, # current based on histogram before scaling
+                                          desiredMin=162, desiredMax=186) # desired matching danaLab histogram after cropping
+        # display_depth_histogram(D455_cropped, 'D455_cropped', bins=200) #! histogram post-scaling (bed min/max now match danaLab)
+
+        display_depth_image_with_colormap(D455_cropped,'D455-cropped', persistImages=True) # TODO REMOVE %%%%%%%%%%%%%%%%%%%%%%%
+
+        D455_cropped = threshold_depth_image(D455_cropped, threshold_value=182, background_value=220)
+
+        display_depth_image_with_colormap(D455_cropped,'D455-cropped+else', persistImages=True) # TODO REMOVE %%%%%%%%%%%%%%%%%%%%%%%
+        display_depth_histogram(D455_cropped, 'D455_cropped', bins=200) # TODO REMOVE %%%%%%%%%%%%%%%%%%%%%%%
+
+        # display_depth_image_with_colormap(D455_cropped,'D455-cropped', persistImages=True)
+        # display_depth_histogram(D455_cropped, 'D455_cropped', bins=200) #! histogram post-scaling (bed min/max now match danaLab)
 
 
     #************** compare histograms of cropped SLP:

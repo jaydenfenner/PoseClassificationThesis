@@ -252,10 +252,27 @@ class SLP_FD(Dataset):
 			img_cb = vis.hconcat_resize([tmpimg, hm_nmd])
 			cv2.imwrite(path.join('rstT', str(idx) + '_cb.jpg'), img_cb)
 
+		#! DISPLAY NORMALISATION INFORMATION FOR DEBUGGING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		print(f"\n---- NORMALISING ------")
+		print(f"norm means: {li_mean}")
+		print(f"norm stds: {li_std}")
+		print(f"pre-norm -->")
+		print(f"	img_mean: {img_patch.mean()}")
+		print(f"	img_std: {img_patch.std()}")
+		print(f"	img_max: {img_patch.max()}")
+		print(f"	img_min: {img_patch.min()}")
+		#! DISPLAY NORMALISATION INFORMATION FOR DEBUGGING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		trans_tch = transforms.Compose([transforms.ToTensor(),
 			transforms.Normalize(mean=li_mean, std=li_std)]
 			)
 		pch_tch = trans_tch(img_patch)
+		#! DISPLAY NORMALISATION INFORMATION FOR DEBUGGING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		print(f"post-norm -->")
+		print(f"	img_mean: {pch_tch.mean()}")
+		print(f"	img_std: {pch_tch.std()}")
+		print(f"	img_max: {pch_tch.max()}")
+		print(f"	img_min: {pch_tch.min()}")
+		#! DISPLAY NORMALISATION INFORMATION FOR DEBUGGING %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 		hms_tch = torch.from_numpy(hms)
 		rst = {
 			'pch':pch_tch,

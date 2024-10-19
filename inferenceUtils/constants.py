@@ -25,7 +25,6 @@ class CoverType(Enum):
 
 class PretrainedModels(Enum):
     HRPOSE_DEPTH = 'SLP_depth_u12_HRpose_exp'
-      
 @dataclass
 class ModelProperties:
     model_name: str # model folder name in SLP repo
@@ -48,13 +47,32 @@ def getModelProperties(modelType: PretrainedModels):
 
 class constants:
     ''' Constants required when preprocessing images'''
-    mean_depth = 0.7302197 #! mean and std used for normalisation of depth image
+    preprocessingConstants = {}
+    # mean and std used for normalisation of depth image
+    mean_depth = 0.7302197 
     std_depth = 0.25182092
 
-    #! required to instantiate model
-    numberOfJoints = 14
+    '''
+    - simLab cropped(0-255):
+        - bed:  min: 180,  peak 190,  max: 208
+        - floor:  min: 237,  peak 242,  max: 246
+        - floor-bed peak diff = 52  (21.5% of floor peak)  (27% of bed peak)
+        - body-bed range = 28
+    - danaLab cropped (0-255):
+        - bed:  min: 162,  peak 179,  max: 186 --------> min_on_side: 152
+        - floor:  min: 212,  peak 220,  max: 227
+        - floor-bed peak diff = 41  (18.6% of floor peak)  (23% of bed peak)
+        - body-bed range = 24
+    - D455_V3 cropped (0-255):
+        - bed:  min: 204,  peak 222,  max: 232
+    '''
+    # bed/subject min and max 0-255 values in danaLab (training data)
+    # for pose flat on back (used for scaling D455 images to match training data)
+    danaLab_minBedDepth = 162
+    danaLab_maxBedDepth = 186
 
-    #! taken from dataset reader
+    # Joint names, indexes and number, taken from dataset reader
+    numberOfJoints = 14 #? Required to instantiate model (out channels)
     skels_name = (
         # ('Pelvis', 'Thorax'),
         ('Thorax', 'Head'),
