@@ -85,6 +85,6 @@ class constants:
     )
     joints_name = (
         "R_Ankle", "R_Knee", "R_Hip", "L_Hip", "L_Knee", "L_Ankle", "R_Wrist", "R_Elbow", "R_Shoulder", "L_Shoulder",
-        "L_Elbow", "L_Wrist", "Thorax", "Head", "Pelvis", "Torso",
-        "Neck") 
+        "L_Elbow", "L_Wrist", "Thorax", "Head", 
+        "Pelvis", "Torso","Neck") # NOTE NO PELVIS, Torso, or Neck
     skels_idx = nameToIdx(skels_name, joints_name=joints_name)

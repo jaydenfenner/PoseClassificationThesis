@@ -181,6 +181,15 @@ def validate(loader, ds_rd, model, criterion, n_iter=-1, logger=None, opts=None,
 			l_std_ori = inp_dct['l_std_ori']
 			if i>= n_iter and n_iter>0:     # limiting iters
 				break
+
+			#! PRINT STATS ABOUT INPUT IMAGE FOR ANALYSIS PURPOSES
+			print(f"\nRIGHT BEFORE INFERENCE-->")
+			print(f"	shape: {input.size()}")
+			print(f"	img_mean: {input.mean()}")
+			print(f"	img_std: {input.std()}")
+			print(f"	img_max: {input.max()}")
+			print(f"	img_min: {input.min()}")
+			#! %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 			outputs = model(input)
 			if isinstance(outputs, list):
 				output = outputs[-1]

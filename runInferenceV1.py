@@ -107,7 +107,9 @@ opts.SLP_set = 'simLab'
 
 # parser.add_argument('--mod_src', nargs='+', default=['IR'],
 #     help='source modality list, can accept multiple modalities typical model [RGB|IR|depthRaw| PMarray]')
-opts.mod_src = ['depth']
+#! NOTE TEMPORARY SWAP TO DEPTHRAW
+opts.mod_src = ['depthRaw']
+# opts.mod_src = ['depth']
 
 # parser.add_argument('--cov_li', nargs='+', default=['uncover', 'cover1', 'cover2'], help='the cover conditions')
 opts.cov_li = ['cover2']

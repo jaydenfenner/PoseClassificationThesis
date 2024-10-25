@@ -1,0 +1,2 @@
+[92m10-20 17:24:56[0m => loading checkpoint 'pretrainedModels/SLP_depth_u12_HRpose_exp/model_dump/checkpoint.pth'
+[92m10-20 17:24:57[0m ----run final test----
